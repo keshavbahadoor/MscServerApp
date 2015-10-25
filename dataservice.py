@@ -44,9 +44,10 @@ class DataService(object):
             return False
 
     # Adds a user's location, speed data
-    def add_location_data(self):
+    def add_location_data(self, latitude, longitude, speed):
         try:
-
+            self.cursor.execute('INSERT INTO "SpeetTest"("Latitude", "Longitude", "Speed")    VALUES (\'{}\', \'{}\', {});'.format(latitude, longitude, speed))
+            self.CONN.commit()
             return True
         except:
             return False
