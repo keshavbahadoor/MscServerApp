@@ -27,9 +27,19 @@ class DataService(object):
     # Returns All API KEYs
     def get_api_keys(self):
         try:
-            self.cursor.execute('Select * from "ApiKey"')
+            self.cursor.execute('Select * from "ApiKey";')
             records = self.cursor.fetchall()
             return records
+        except:
+            return False
+
+    # Checks to see if passed API KEY exists
+    def api_key_exists(self, key):
+        try:
+            self.cursor.execute('Select * from "ApiKey" where "ApiKey" = \'' + key + '\';')
+            if self.cursor.rowcount > 0:
+                return True
+            return False
         except:
             return False
 

@@ -16,6 +16,10 @@ def init_request():
     if app.data_service.connect() is False:
         return jsonify({'error': 'Database connection error'}), 404
 
+    # API Authentication check
+    if app.data_service.api_key_exists(request.headers.get('X-API-KEY')) is False:
+        return jsonify({'error': 'Authentication error'}), 404
+
 # Executes after the request is finished.
 # Closes database connections, etc.
 @app.teardown_appcontext
@@ -31,7 +35,7 @@ def test():
         return jsonify({'error': 'Database request error'}), 404
     return jsonify(keys)
 
-
+# Accepts username / userkey to register App user
 @app.route('/registeruser', methods=['POST'])
 def register_user():
     return jsonify({'error': 'function not supported'}), 200
