@@ -62,5 +62,5 @@ def default():
 
 
 if __name__ == '__main__':
-    app.debug = config.DEBUG_MODE
-    app.run()
+#    app.debug = config.DEBUG_MODE
+    app.run(host='0.0.0.0')
