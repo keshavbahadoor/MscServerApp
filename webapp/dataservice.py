@@ -67,6 +67,28 @@ class DataService(object):
             print e
             return False
 
+    # Adds GPS data with weather
+    def add_gps_weather_data(self, latitude, longitude, speed, userid, weatherid, rain, windspeed, temperature, pressure, humidity, timestamp):
+        if timestamp is not None:
+            sql = 'INSERT INTO "GPSData"("UserID", "Latitude", "Longitude", "Speed", ' \
+                  '"WeatherID", "Rain", "WindSpeed", "Temperature", "Pressure", "Humidity", ' \
+                  '"TimeStamp") VALUES (\'{}\', \'{}\', \'{}\', {}, ' \
+                  '{}, {}, {}, {}, {}, {}, \'{}\');'.format(userid, latitude, longitude, speed, weatherid, rain,
+                                                            windspeed, temperature, pressure, humidity, timestamp)
+        else:
+            sql = 'INSERT INTO "GPSData"("UserID", "Latitude", "Longitude", "Speed", ' \
+                  '"WeatherID", "Rain", "WindSpeed", "Temperature", "Pressure", "Humidity" ' \
+                  ') VALUES (\'{}\', \'{}\', \'{}\', {}, ' \
+                  '{}, {}, {}, {}, {}, {});'.format(userid, latitude, longitude, speed, weatherid, rain, windspeed,
+                                                    temperature, pressure, humidity)
+        try:
+            self.cursor.execute(sql)
+            self.CONN.commit()
+            return True
+        except Exception, e:
+            print e
+            return False
+
     # Adds sensor data
     def add_acc_sensor_data(self, userid, accx, accy, accz, timestamp):
         if timestamp is not None:

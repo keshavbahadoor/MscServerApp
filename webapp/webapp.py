@@ -96,11 +96,17 @@ def add_gps_data():
             'longitude' not in request.form or
             'speed' not in request.form):
         return jsonify({'error': 'missing parameters'}), 404
-    app.data_service.add_gps_data(request.form.get('latitude'),
-                                  request.form.get('longitude'),
-                                  request.form.get('speed'),
-                                  request.form.get('userid'),
-                                  request.form.get('timestamp'))
+    app.data_service.add_gps_weather_data(request.form.get('latitude'),
+                                          request.form.get('longitude'),
+                                          request.form.get('speed'),
+                                          request.form.get('userid'),
+                                          request.form.get('weatherid'),
+                                          request.form.get('rain'),
+                                          request.form.get('wind'),
+                                          request.form.get('temp'),
+                                          request.form.get('pressure'),
+                                          request.form.get('humidity'),
+                                          request.form.get('timestamp'))
     return jsonify({'success': 'data captured'}), 200
 
 
