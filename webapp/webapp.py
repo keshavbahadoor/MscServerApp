@@ -130,6 +130,77 @@ def add_acc_sensor_data():
 
 
 # ----------------------------------------------------------------------------------------|
+# Returns the driving event records by the supplied GoogleID
+# ----------------------------------------------------------------------------------------|
+@app.route('/getdrivingevent', methods=['POST'])
+def get_driving_event_data():
+    if 'userid' not in request.form:
+        return jsonify({'error': 'missing parameters'}), 404
+    return jsonify(events=app.data_service.get_driving_events(request.form.get('userid')))
+
+
+# ----------------------------------------------------------------------------------------|
+# Gets news feed data
+# ----------------------------------------------------------------------------------------|
+@app.route('/getfeed', methods=['POST'])
+def get_feed():
+    if 'userid' not in request.form:
+        return jsonify({'error': 'missing parameters'}), 404
+    return jsonify(events=app.data_service.get_feed())
+
+# ----------------------------------------------------------------------------------------|
+# Gets profile
+# ----------------------------------------------------------------------------------------|
+@app.route('/getprofile', methods=['POST'])
+def get_profile():
+    if 'userid' not in request.form:
+        return jsonify({'error': 'missing parameters'}), 404
+    return jsonify(score=app.data_service.get_score(request.form.get('userid')),
+                   badges=app.data_service.get_user_badges(request.form.get('userid')))
+
+
+
+# ----------------------------------------------------------------------------------------|
+# Returns all current users signed up for the application
+# ----------------------------------------------------------------------------------------|
+@app.route('/getusers', methods=['POST'])
+def get_users():
+    if 'userid' not in request.form:
+        return jsonify({'error': 'missing parameters'}), 404
+    return jsonify(users=app.data_service.get_all_users(request.form.get('userid')))
+
+
+# ----------------------------------------------------------------------------------------|
+# Returns all badges assigned to the user
+# ----------------------------------------------------------------------------------------|
+@app.route('/getuserbadges', methods=['POST'])
+def get_user_badges():
+    if 'userid' not in request.form:
+        return jsonify({'error': 'missing parameters'}), 404
+    return jsonify(data=app.data_service.get_user_badges(request.form.get('userid')))
+
+
+# ----------------------------------------------------------------------------------------|
+# Returns all user activity assigned to user
+# ----------------------------------------------------------------------------------------|
+@app.route('/getuseractivity', methods=['POST'])
+def get_user_activity():
+    if 'userid' not in request.form:
+        return jsonify({'error': 'missing parameters'}), 404
+    return jsonify(data=app.data_service.get_user_activity(request.form.get('userid')))
+
+
+# ----------------------------------------------------------------------------------------|
+# Returns all user activity for all users except current user
+# ----------------------------------------------------------------------------------------|
+@app.route('/getuseractivityall', methods=['POST'])
+def get_user_activity_all():
+    if 'userid' not in request.form:
+        return jsonify({'error': 'missing parameters'}), 404
+    return jsonify(data=app.data_service.get_user_activity_all(request.form.get('userid')))
+
+
+# ----------------------------------------------------------------------------------------|
 # For testing purposes only
 # ----------------------------------------------------------------------------------------|
 @app.route('/testmethod')
@@ -156,7 +227,7 @@ def default():
 
 if __name__ == '__main__':
     if config.DEBUG_MODE:
-        app.debug
+        app.debug = True
         app.run()
     else:
         app.run(host='0.0.0.0')
