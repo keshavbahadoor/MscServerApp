@@ -3,6 +3,7 @@ from flask import request
 from flask import jsonify
 import dataservice
 import config
+import json
 
 
 app = Flask(__name__)
@@ -111,6 +112,48 @@ def add_gps_data():
 
 
 # ----------------------------------------------------------------------------------------|
+# Adds GPS Data in bulk
+# ----------------------------------------------------------------------------------------|
+@app.route('/addgpsdatabulk', methods=['POST'])
+def add_gps_data_bulk():
+    if ('userid' not in request.form or
+            'data' not in request.form):
+        return jsonify({'error': 'missing parameters'}), 404
+    data = json.loads(request.form.get('data'))
+    for row in data:
+        app.data_service.add_gps_weather_data(row['latitude'],
+                                              row['longitude'],
+                                              row['speed'],
+                                              request.form.get('userid'),
+                                              row['weatherid'],
+                                              row['rain'],
+                                              row['wind'],
+                                              row['temp'],
+                                              row['pressure'],
+                                              row['humidity'],
+                                              row['time'])
+    return jsonify({'success': 'bulk data captured'}), 200
+
+
+# ----------------------------------------------------------------------------------------|
+# Adds GPS Data in bulk
+# ----------------------------------------------------------------------------------------|
+@app.route('/addaccsensordatabulk', methods=['POST'])
+def add_acc_sensor_data_bulk():
+    if ('userid' not in request.form or
+            'data' not in request.form):
+        return jsonify({'error': 'missing parameters'}), 404
+    data = json.loads(request.form.get('data'))
+    for row in data:
+        app.data_service.add_acc_sensor_data(request.form.get('userid'),
+                                             row['AccX'],
+                                             row['AccY'],
+                                             row['AccZ'],
+                                             row['time'])
+    return jsonify({'success': 'bulk data captured'}), 200
+
+
+# ----------------------------------------------------------------------------------------|
 # Adds user's acceleration data to server
 # client can pass timestamp - this is for cached data
 # ----------------------------------------------------------------------------------------|
@@ -157,7 +200,6 @@ def get_profile():
         return jsonify({'error': 'missing parameters'}), 404
     return jsonify(score=app.data_service.get_score(request.form.get('userid')),
                    badges=app.data_service.get_user_badges(request.form.get('userid')))
-
 
 
 # ----------------------------------------------------------------------------------------|

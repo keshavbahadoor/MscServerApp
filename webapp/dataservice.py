@@ -179,9 +179,33 @@ class DataService(object):
     # Returns all badges assigned to user
     def get_user_badges(self, googleid):
         try:
-            self.cursor.execute('Select * from "Badges" where "UserID" = \'{}\';'.format(googleid))
+            self.cursor.execute('Select * from "Badge" where "UserID" = \'{}\';'.format(googleid))
             records = self.cursor.fetchall()
             return records
+        except Exception, e:
+            print e
+            return False
+
+    # Returns all badges
+    def get_feed(self):
+        try:
+            self.cursor.execute('Select "BadgeName", "BadgeID", "TimeStamp", "DisplayName", "PhotoURL" '
+                                'from "Badge" '
+                                'join "User" on "User"."GooglePlusID" = "Badge"."UserID" '
+                                'order by "TimeStamp" desc ;')
+            records = self.cursor.fetchall()
+            return records
+        except Exception, e:
+            print e
+            return False
+
+    # Adds user badge
+    def insert_badge(self, googleid, badgeid, badgename, timestamp):
+        try:
+            self.cursor.execute('INSERT INTO "Badge"( "BadgeName",  "BadgeID", "TimeStamp", "UserID") '
+                                'VALUES (\'{}\', {}, \'{}\', \'{}\' );'.format(badgename, badgeid, timestamp, googleid))
+            self.CONN.commit()
+            return True
         except Exception, e:
             print e
             return False
@@ -219,5 +243,71 @@ class DataService(object):
             print e
             return False
 
+    # Gets gps data
+    def get_gpsdata(self, googleid, limit):
+        try:
+            self.cursor.execute('Select * from "GPSData" where "UserID" = \'{}\''
+                                'order by "GPSDataID" desc '
+                                'limit {};'.format(googleid, limit))
+            records = self.cursor.fetchall()
+            return records
+        except Exception, e:
+            print e
+            return False
 
+    # Gets gps data
+    def get_gpsdata_limit(self, limit):
+        try:
+            self.cursor.execute('Select * from "GPSData"  '
+                                'order by "GPSDataID" desc '
+                                'limit {};'.format(limit))
+            records = self.cursor.fetchall()
+            return records
+        except Exception, e:
+            print e
+            return False
+
+    # Gets all gps data by date
+    def get_gpsdata_date(self, date):
+        try:
+            self.cursor.execute('Select * from "GPSData" where "TimeStamp"::date = \'{}\''
+                                'order by "GPSDataID" desc ;'.format(date))
+            records = self.cursor.fetchall()
+            return records
+        except Exception, e:
+            print e
+            return False
+
+    # Gets all gps data by date
+    def get_accdata_date(self, date):
+        try:
+            self.cursor.execute('Select * from "AccSensorData" where "TimeStamp"::date = \'{}\''
+                                'order by "AccSensorID" desc ;'.format(date))
+            records = self.cursor.fetchall()
+            return records
+        except Exception, e:
+            print e
+            return False
+
+    # Gets user score
+    def get_score(self, googleid):
+        try:
+            self.cursor.execute('Select "Score" from "User" where "GooglePlusID" = \'{}\';'.format(googleid))
+            records = self.cursor.fetchall()
+            return records
+        except Exception, e:
+            print e
+            return False
+
+    # Updtes user score
+    def update_score(self, googleid, score):
+        try:
+            self.cursor.execute('UPDATE "User" '
+                                'SET "Score" = {} '
+                                'where "GooglePlusID" = \'{}\';'.format(score, googleid))
+            self.CONN.commit()
+            return True
+        except Exception, e:
+            print e
+            return False
 

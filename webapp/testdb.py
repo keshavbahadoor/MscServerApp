@@ -13,7 +13,11 @@ from flask import jsonify
 
 data_service = dataservice.DataService()
 data_service.connect()
-#data = data_service.add_google_user('1', 'test', 'test person', 'something:url')
-data = data_service.user_exists('2')
+
+# Do stuff here with data service
+
+
+
+data = data_service.get_user_badges('111006565137014624471')
 
 print data
