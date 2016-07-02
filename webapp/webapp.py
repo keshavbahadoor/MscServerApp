@@ -87,6 +87,22 @@ def add_location_data():
 
 
 # ----------------------------------------------------------------------------------------|
+# PUSH NOTIFICATIONS
+# Currently the applicaion is using OneSignal as its push notification service.
+# This call captures a mapping between the google id and the one signal client id.
+# Using this, it is possible to send notifications to specific clients.
+# ----------------------------------------------------------------------------------------|
+@app.route('/registeronesignal', methods=['POST'])
+def add_location_data():
+    if ('googleid' not in request.form or
+            'onesignalid' not in request.form):
+        return jsonify({'error': 'missing parameters'}), 404
+    app.data_service.insert_onesingal_mapping(request.form.get('googleid'),
+                                              request.form.get('onesignalid'))
+    return jsonify({'success': 'data captured'}), 200
+
+
+# ----------------------------------------------------------------------------------------|
 # Adds user's latitude, longitude and speed data
 # client can pass timestamp - this is for cached data
 # ----------------------------------------------------------------------------------------|
@@ -190,6 +206,7 @@ def get_feed():
     if 'userid' not in request.form:
         return jsonify({'error': 'missing parameters'}), 404
     return jsonify(events=app.data_service.get_feed())
+
 
 # ----------------------------------------------------------------------------------------|
 # Gets profile
