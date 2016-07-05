@@ -93,10 +93,14 @@ def add_location_data():
 # Using this, it is possible to send notifications to specific clients.
 # ----------------------------------------------------------------------------------------|
 @app.route('/registeronesignal', methods=['POST'])
-def add_location_data():
+def add_one_signal_mapping():
     if ('googleid' not in request.form or
             'onesignalid' not in request.form):
         return jsonify({'error': 'missing parameters'}), 404
+
+    if app.data_service.pushnotification_map_exists(request.form.get('googleid')):
+        return jsonify({'error': 'User already exists'}), 401
+
     app.data_service.insert_onesingal_mapping(request.form.get('googleid'),
                                               request.form.get('onesignalid'))
     return jsonify({'success': 'data captured'}), 200
@@ -209,6 +213,19 @@ def get_feed():
 
 
 # ----------------------------------------------------------------------------------------|
+# Gets news feed data with limit
+# ----------------------------------------------------------------------------------------|
+@app.route('/getfeedlimitoffset', methods=['POST'])
+def get_feed_limit():
+    if ('userid' not in request.form or
+            'limit' not in request.form or
+            'offset' not in request.form):
+        return jsonify({'error': 'missing parameters'}), 404
+    return jsonify(events=app.data_service.get_feed_limit_offset(request.form.get('limit'),
+                                                                 request.form.get('offset')))
+
+
+# ----------------------------------------------------------------------------------------|
 # Gets profile
 # ----------------------------------------------------------------------------------------|
 @app.route('/getprofile', methods=['POST'])
@@ -217,6 +234,19 @@ def get_profile():
         return jsonify({'error': 'missing parameters'}), 404
     return jsonify(score=app.data_service.get_score(request.form.get('userid')),
                    badges=app.data_service.get_user_badges(request.form.get('userid')))
+
+
+# ----------------------------------------------------------------------------------------|
+# Gets profile by user name
+# ----------------------------------------------------------------------------------------|
+@app.route('/getprofilebyname', methods=['POST'])
+def get_profile_by_name():
+    if 'name' not in request.form:
+        return jsonify({'error': 'missing parameters'}), 404
+    data = app.data_service.get_user_id(request.form.get('name'))
+    return jsonify(score=app.data_service.get_score(data[0].__str__()),
+                   badges=app.data_service.get_user_badges(data[0].__str__()),
+                   photo=data[1].__str__())
 
 
 # ----------------------------------------------------------------------------------------|
@@ -240,6 +270,16 @@ def get_user_badges():
 
 
 # ----------------------------------------------------------------------------------------|
+# Returns all badges assigned to the user
+# ----------------------------------------------------------------------------------------|
+@app.route('/getmapdata', methods=['POST'])
+def get_map_badges():
+    if 'userid' not in request.form:
+        return jsonify({'error': 'missing parameters'}), 404
+    return jsonify(data=app.data_service.get_map_badges())
+
+
+# ----------------------------------------------------------------------------------------|
 # Returns all user activity assigned to user
 # ----------------------------------------------------------------------------------------|
 @app.route('/getuseractivity', methods=['POST'])
@@ -257,6 +297,31 @@ def get_user_activity_all():
     if 'userid' not in request.form:
         return jsonify({'error': 'missing parameters'}), 404
     return jsonify(data=app.data_service.get_user_activity_all(request.form.get('userid')))
+
+
+# ----------------------------------------------------------------------------------------|
+# Add and remove likes
+# ----------------------------------------------------------------------------------------|
+@app.route('/addlike', methods=['POST'])
+def add_like():
+    if ('userid' not in request.form or
+            'badgeid' not in request.form or
+            'displayname' not in request.form):
+        return jsonify({'error': 'missing parameters'}), 404
+    app.data_service.insert_like(request.form.get('badgeid'),
+                                 request.form.get('userid'),
+                                 request.form.get('displayname'))
+    return jsonify({'success': 'data captured'}), 200
+
+
+@app.route('/removelike', methods=['POST'])
+def remove_like():
+    if ('userid' not in request.form or
+            'badgeid' not in request.form):
+        return jsonify({'error': 'missing parameters'}), 404
+    app.data_service.remove_like(request.form.get('badgeid'),
+                                 request.form.get('userid'))
+    return jsonify({'success': 'data captured'}), 200
 
 
 # ----------------------------------------------------------------------------------------|

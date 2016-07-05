@@ -1,5 +1,6 @@
 import psycopg2
 import config
+import json
 
 
 class DataService(object):
@@ -33,6 +34,16 @@ class DataService(object):
             records = self.cursor.fetchall()
             return records
         except:
+            return False
+
+    # Returns All badges
+    def get_badges_all(self):
+        try:
+            self.cursor.execute('Select * from "Badge";')
+            records = self.cursor.fetchall()
+            return records
+        except Exception, e:
+            print e
             return False
 
     # Checks to see if passed API KEY exists
@@ -179,9 +190,13 @@ class DataService(object):
     # Returns all badges assigned to user
     def get_user_badges(self, googleid):
         try:
-            self.cursor.execute('Select * from "Badge" where "UserID" = \'{}\';'.format(googleid))
-            records = self.cursor.fetchall()
-            return records
+            self.cursor.execute('Select "BadgeID", "BadgeName", "TimeStamp" '
+                                'from "Badge" where "UserID" = \'{}\';'.format(googleid))
+            columns = [column[0] for column in self.cursor.description]
+            results = []
+            for row in self.cursor.fetchall():
+                results.append(dict(zip(columns, row)))
+            return results
         except Exception, e:
             print e
             return False
@@ -189,12 +204,62 @@ class DataService(object):
     # Returns all badges
     def get_feed(self):
         try:
-            self.cursor.execute('Select "BadgeName", "BadgeID", "TimeStamp", "DisplayName", "PhotoURL" '
+            self.cursor.execute('Select "ID", "BadgeName", "BadgeID", "TimeStamp", "DisplayName", "PhotoURL" '
                                 'from "Badge" '
-                                'join "User" on "User"."GooglePlusID" = "Badge"."UserID" '
-                                'order by "TimeStamp" desc ;')
-            records = self.cursor.fetchall()
-            return records
+                                'join "User" on "User"."GooglePlusID" = "Badge"."UserID"'
+                                'where "TimeStamp" > current_date - interval \'3000\' day '
+                                'order by "TimeStamp" desc '
+                                'limit 20;')
+            columns = [column[0] for column in self.cursor.description]
+            results = []
+            for row in self.cursor.fetchall():
+                results.append(dict(zip(columns, row)))
+            return results
+        except Exception, e:
+            print e
+            return False
+
+    # Returns All badges
+    def get_map_badges(self):
+        try:
+            self.cursor.execute('SELECT "BadgeID", "Latitude", "Longitude", "TimeStamp", "DisplayName"'
+                                '  FROM "Badge"'
+                                '  join "User" on "User"."GooglePlusID" = "Badge"."UserID";')
+            columns = [column[0] for column in self.cursor.description]
+            results = []
+            for row in self.cursor.fetchall():
+                results.append(dict(zip(columns, row)))
+            return results
+        except Exception, e:
+            print e
+            return False
+
+    def get_likes_for_badge(self, badgeid):
+        try:
+            arr = []
+            self.cursor.execute('Select "DisplayName" from "BadgeLikes" where "BadgeID" = {};'.format(badgeid))
+            for val in self.cursor:
+                arr.append(val[0])
+            return arr
+        except Exception, e:
+            print e
+            return False
+
+    # Returns all badges with supplied limit and offset.
+    def get_feed_limit_offset(self, limit, offset):
+        try:
+            self.cursor.execute('Select "ID", "BadgeName", "BadgeID", "TimeStamp", "DisplayName", "PhotoURL" '
+                                'from "Badge" '
+                                'join "User" on "User"."GooglePlusID" = "Badge"."UserID"'
+                                'order by "TimeStamp" desc '
+                                'limit {} offset {};'.format(limit, offset))
+            columns = [column[0] for column in self.cursor.description]
+            columns.append('Likes')
+            results = []
+            for row in self.cursor.fetchall():
+                results.append(dict(zip(columns, row)))
+                results[-1]['Likes'] = self.get_likes_for_badge(row[0])
+            return results
         except Exception, e:
             print e
             return False
@@ -293,8 +358,8 @@ class DataService(object):
     def get_score(self, googleid):
         try:
             self.cursor.execute('Select "Score" from "User" where "GooglePlusID" = \'{}\';'.format(googleid))
-            records = self.cursor.fetchall()
-            return records
+            records = self.cursor.fetchone()
+            return records[0]
         except Exception, e:
             print e
             return False
@@ -311,3 +376,61 @@ class DataService(object):
             print e
             return False
 
+    # ----------PUSH NOTIFICATIONS------------------------------
+    # Adds push notification mapping for one signal
+    def insert_onesingal_mapping(self, googleid, onesignalid):
+        try:
+            self.cursor.execute('INSERT INTO "PushNotificationMap"( "GooglePlusID",  "OneSignalID") '
+                                'VALUES (\'{}\', \'{}\' );'.format(googleid, onesignalid))
+            self.CONN.commit()
+            return True
+        except Exception, e:
+            print e
+            return False
+
+    # Returns true if push notification map exists false if otherwise
+    def pushnotification_map_exists(self, googleid):
+        try:
+            self.cursor.execute('SELECT COUNT(*) from "PushNotificationMap" '
+                                'where "GooglePlusID" = \'{}\';'.format(googleid))
+            result = self.cursor.fetchone()
+            if result[0] == 0:
+                return False
+            return True
+        except Exception, e:
+            print e
+            return False
+
+    # Gets userid by username
+    def get_user_id(self, name):
+        try:
+            self.cursor.execute('Select "GooglePlusID", "PhotoURL" from "User" '
+                                'where "DisplayName" like \'{}\';'.format(name))
+            records = self.cursor.fetchone()
+            return records
+        except Exception, e:
+            print e
+            return False
+
+    # ---------- LIKES------------------------------
+    # Adds push notification mapping for one signal
+    def insert_like(self, badgeid, userid, displayname):
+        try:
+            self.cursor.execute('INSERT INTO "BadgeLikes"( "BadgeID",  "UserID", "DisplayName") '
+                                'VALUES ({}, \'{}\', \'{}\' );'.format(badgeid, userid, displayname))
+            self.CONN.commit()
+            return True
+        except Exception, e:
+            print e
+            return False
+
+    def remove_like(self, badgeid, userid):
+        try:
+            self.cursor.execute('DELETE FROM "BadgeLikes" '
+                                'WHERE "BadgeID" = {} '
+                                'AND "UserID" = \'{}\';'.format(badgeid, userid))
+            self.CONN.commit()
+            return True
+        except Exception, e:
+            print e
+            return False
